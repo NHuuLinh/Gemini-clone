@@ -17,7 +17,7 @@ class AllChatHistoryCollectionViewCell: UICollectionViewCell {
         // Initialization code
     }
     func bindData(data: UserChatHistories){
-        chatTitle.text = data.idChat
+        chatTitle.text = data.firstMessage
         print("data:\(data)")
     }
 

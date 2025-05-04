@@ -14,19 +14,41 @@ class MessengerViewController: BaseMessageViewController{
     private let viewModel = MessageViewModel()
     var reloadMessage : (() -> Void)?
     private var refeshControl = UIRefreshControl()
-    let downloadImage = UIImageView(frame: CGRect(x: 0, y: 0, width: 400, height: 400))
-
+    let menuWidth :CGFloat = 200.0
+    let allChatSubview = UIView(frame: CGRect(x: 0, y: 0, width: 1, height: 1))
+    private var allChatLeadingConstraint: NSLayoutConstraint!
+    private var messagesLeadingConstraint: NSLayoutConstraint?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        loadChatHistory()
-        registerDelegte()
-        subviewHandle()
         viewModel.startNewChat()
+        setupCustomConstraints()
+    }
+    
+    override func viewIsAppearing(_ animated: Bool) {
 
     }
+    override func viewDidAppear(_ animated: Bool) {
+//        addHeadderBar()
+    }
+    
     override func viewWillAppear(_ animated: Bool) {
         navigationController?.navigationBar.isHidden = true
         self.tabBarController?.tabBar.isHidden = true
+        registerDelegte()
+        loadChatHistory()
+    }
+    private func setupCustomConstraints() {
+        messagesCollectionView.translatesAutoresizingMaskIntoConstraints = false
+        messagesLeadingConstraint = messagesCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 500)
+        messagesLeadingConstraint?.isActive = true
+
+        NSLayoutConstraint.activate([
+            messagesCollectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
+            messagesCollectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            messagesCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+            // Không cần leading nếu bạn đặt width cố định
+        ])
     }
     @objc func textFieldDidChange(_ textField: UITextField) {
         messageInputBar.inputTextView.text = textField.text
@@ -36,20 +58,20 @@ class MessengerViewController: BaseMessageViewController{
     }
     
     func loadChatHistory(){
-        showLoading(isShow: true)
+//        showLoading(isShow: true)
         viewModel.getAllChatData { [weak self] result in
             guard let self = self else {
-                self?.showLoading(isShow: false)
+//                self?.showLoading(isShow: false)
                 return
             }
-            self.showLoading(isShow: false)
+//            self.showLoading(isShow: false)
             switch result {
             case .success:
                 self.handlerChatHistoryData()
             case .outOfData:
                 print("UnknowError")
                 self.handlerChatHistoryData()
-//                self.view.makeToast("All chat history loaded",duration: 5.0 ,position: .top)
+                //                self.view.makeToast("All chat history loaded",duration: 5.0 ,position: .top)
                 print("sd")
             case .failure(let error):
                 self.showAlert(title: "error", message: error)
@@ -59,100 +81,105 @@ class MessengerViewController: BaseMessageViewController{
             }
         }
     }
+    func caculateSafeArea() -> CGFloat{
+        var safeAreaHeight : CGFloat
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+            if let window = windowScene.windows.first {
+                safeAreaHeight = window.safeAreaInsets.top// + window.safeAreaInsets.bottom
+                print("Chiều cao của safe area: \(safeAreaHeight)")
+            } else {
+                safeAreaHeight = 60
+                print("Không thể lấy được window")
+            }
+        } else {
+            safeAreaHeight = 60
+            print("Không thể lấy được window scene")
+        }
+        let height = 40 + safeAreaHeight
+        return height
+    }
+    func addHeadderBar(){
+        let userSubview = UIView()
+        view.addSubview(userSubview)
+        userSubview.translatesAutoresizingMaskIntoConstraints = false
+        let widthConstraint = userSubview.widthAnchor.constraint(equalToConstant: view.bounds.width)
+        NSLayoutConstraint.activate([
+            userSubview.topAnchor.constraint(equalTo: view.topAnchor),
+            userSubview.heightAnchor.constraint(equalToConstant: caculateSafeArea()),
+            userSubview.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            widthConstraint
+        ])
+        
+        let childVC = MenuViewController()
+        addChild(childVC)
+        userSubview.addSubview(childVC.view)
+        childVC.menuSize = menuWidth
+        childVC.didSelectBtn = { [weak self] isSelected in
+            guard let self = self else {return}
+            UIView.animate(withDuration: 0.3) {
+                self.messagesCollectionView.contentInset.left = isSelected ? self.menuWidth : 0.1
+                self.allChatLeadingConstraint.constant = isSelected ? self.menuWidth : 0.1
+                self.allChatLeadingConstraint.isActive = true
+                self.view.layoutIfNeeded()
+            }
+        }
+        childVC.view.frame = userSubview.bounds
+        childVC.didMove(toParent: self)
+        view.addSubview(allChatSubview)
+        allChatSubviewHandle()
+    }
+    func allChatSubviewHandle(){
+        allChatSubview.translatesAutoresizingMaskIntoConstraints = false
+        allChatLeadingConstraint = allChatSubview.trailingAnchor.constraint(equalTo: view.leadingAnchor)
+        NSLayoutConstraint.activate([
+            allChatSubview.topAnchor.constraint(equalTo: view.topAnchor),
+            allChatSubview.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            allChatLeadingConstraint,
+            allChatSubview.widthAnchor.constraint(equalToConstant: menuWidth)
+        ])
+        let childVC = AllChatHistoryViewController()
+        childVC.didSelectChatHistory = { [weak self] idChat in
+            guard let self = self else {return}
+            self.viewModel.idChat = idChat
+            self.loadChatHistory()
+        }
+        addChild(childVC)
+        allChatSubview.addSubview(childVC.view)
+        childVC.view.frame = allChatSubview.bounds
+        childVC.didMove(toParent: self)
+    }
     func handlerChatHistoryData() {
         let datas = viewModel.chatHistory
         guard datas.count > 0 else {return}
         for data in datas {
-            let messageText = data.text.decode()
-            if data.type == TypeMessage.image.rawValue {
-                print("xử lí image")
-            } else {
-                let newMessage = Message(sender: Sender(senderId: data.role, displayName: data.role),
-                                             messageId: "",
+            if let imagePath = data.imagePath {
+                let image = viewModel.loadImageFromRealm(imagePath: imagePath)
+                let mediaImage = ImageMediaItem(image: image)
+                let newMessage = Message(sender: Sender(senderId: data.sender, displayName: data.sender),
+                                         messageId: "",
                                          sentDate: Date(),
-                                             kind: .text(messageText))
-                    self.messages.insert(newMessage, at: 0)
-//                }
-
+                                         kind: .photo(mediaImage))
+                self.messages.insert(newMessage, at: 0)
+            } else {
+                let messageText = data.message?.decode() ?? ""
+                let newMessage = Message(sender: Sender(senderId: data.sender, displayName: data.sender),
+                                         messageId: "",
+                                         sentDate: Date(),
+                                         kind: .text(messageText))
+                self.messages.insert(newMessage, at: 0)
             }
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: {
-                self.messagesCollectionView.reloadData()
-                self.messagesCollectionView.scrollToLastItem(animated: false)
-                self.isLoadingMoreData = false
+            self.messagesCollectionView.reloadData()
+            self.messagesCollectionView.scrollToLastItem(animated: false)
+            self.isLoadingMoreData = false
         })
-    }
-
-    func downloadImage(imageUrl: String?, hander: @escaping ((UIImage) -> ())){
-        let imageUrl = URL(string: imageUrl ?? "")
-        let defaultImage = UIImage(named: "screen-image-error")!
-        downloadImage.kf.setImage(with: imageUrl, placeholder: defaultImage , options: nil, completionHandler: { result in
-            switch result {
-            case .success(_):
-                // Ảnh đã tải thành công
-                print("downloadImage success")
-                hander(self.downloadImage.image ?? defaultImage)
-                break
-            case .failure(_):
-                // Xảy ra lỗi khi tải ảnh
-                self.downloadImage.image = defaultImage
-                hander(defaultImage)
-            }
-        })
-    }
-    func subviewHandle(){
-//        var safeAreaHeight : CGFloat
-//        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-//            if let window = windowScene.windows.first {
-//                safeAreaHeight = window.safeAreaInsets.top// + window.safeAreaInsets.bottom
-//                print("Chiều cao của safe area: \(safeAreaHeight)")
-//            } else {
-//                safeAreaHeight = 60
-//                print("Không thể lấy được window")
-//            }
-//        } else {
-//            safeAreaHeight = 60
-//            print("Không thể lấy được window scene")
-//        }
-//        let height = 50 + safeAreaHeight
-//        let userSubview = UIView()
-//        view.addSubview(userSubview)
-//        userSubview.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: height)
-//        messagesCollectionView.contentInset.top = userSubview.frame.height
-//
-//        let childVC = IncognitoMessageHeaderViewController()
-//        addChild(childVC)
-//        childVC.bindData(userID: viewModel.otherUserId)
-//        childVC.didSelectBtn = { [weak self] in
-//            guard let self = self else {return}
-//            self.routoInfoVC()
-////            self.showAlert(title: "Notice", message: "This feature will be added later.")
-//        }
-//        userSubview.addSubview(childVC.view)
-//        childVC.view.frame = userSubview.bounds
-//        childVC.didMove(toParent: self)
-    }
-    
-    func routoInfoVC(){
-//        let vc = IncognitoInfoViewController()
-//        vc.idRoom = viewModel.idRoom
-//        vc.otherUserId = viewModel.otherUserId
-//        self.navigationController?.pushViewController(vc, animated: true)
     }
 }
 
 extension MessengerViewController: AvatarConfigurationDelegate {
-
     func loadMoreData() {
-//        if !viewModel.isFirstFetchData {
-//            guard !viewModel.isMaxData else {
-//                print("đã hết data để Refesh")
-//                messagesCollectionView.bounces = false
-//                return}
-//            DispatchQueue.main.async {
-//                self.loadChatHistory()
-//            }
-//        }
+        print("load thêm lịch sử chat")
     }
     
     func endEdit() {
@@ -160,27 +187,10 @@ extension MessengerViewController: AvatarConfigurationDelegate {
     }
 }
 extension MessengerViewController: MessageInputButtonViewDelegate, InputBarAccessoryViewDelegate{
-
+    
     func inputBar(_ inputBar: InputBarAccessoryView, didPressSendButtonWith attachments: [AttachmentManager.Attachment], text: String) {
-        for item in attachments {
-            if case .image(let uIImage) = item {
-                handleImageMessage(image: uIImage)
-                handleTextMessage(text: text)
-                print("có image")
-                guard let imageData = uIImage.jpegData(compressionQuality: 0.5) else {
-                    print("Failed to convert image to data")
-                    return
-                }
-                Task {
-                    let response = await viewModel.sendMessageWithImage(prompt: text, imageData: imageData)
-                    print("AI response: \(response)")
-                    self.handleModelTextMessage(text: response)
-//                    self.handleImageMessage(imageString: response)
-                }
-            } else {
-                print("inputBar khoong co image")
-            }
-        }
+        handleTextMessage(text: text)
+        handleImagePromt(attachments: attachments, prompt: text)
         inputBar.invalidatePlugins()
     }
     func registerDelegte(){
@@ -188,48 +198,49 @@ extension MessengerViewController: MessageInputButtonViewDelegate, InputBarAcces
         messageInputBar = MessageInputButtonView()
         messageInputBar.delegate = self
     }
-
+    
     func getRootVC() -> UIViewController {
         print("getRootVC")
         return self
     }
-
+    
     func inputBar(_ inputBar: InputBarAccessoryView, didPressSendButtonWith attachments: [AttachmentManager.Attachment]) {
-        for item in attachments {
-            if case .image(let uIImage) = item {
-                handleImageMessage(image: uIImage)
-
-                print("có image")
-                guard let imageData = uIImage.jpegData(compressionQuality: 0.5) else {
-                    print("Failed to convert image to data")
-                    return
-                }
-                Task {
-                    let response = await viewModel.sendMessageWithImage(prompt: "trong ảnh có gì", imageData: imageData)
-                    print("AI response: \(response)")
-                    self.handleModelTextMessage(text: response)
-//                    self.handleImageMessage(imageString: response)
-                }
-            } else {
-                print("inputBar khoong co image")
-            }
-        }
+        handleImagePromt(attachments: attachments)
         inputBar.invalidatePlugins()
     }
     func inputBar(_ inputBar: InputBarAccessoryView, didPressSendButtonWith text: String) {
         let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else {return}
         handleTextMessage(text: text)
+        viewModel.saveChatHistory(sender: Role.user, message: text)
         print("khoong co image")
         Task {
             let response = await viewModel.sendMessage(prompt: trimmedText)
             print("AI response: \(response)")
-            // ví dụ: thêm vào giao diện chat
             self.handleModelTextMessage(text: response)
-
         }
     }
-
+    func handleImagePromt(attachments: [AttachmentManager.Attachment],prompt: String? = nil ){
+        for item in attachments {
+            if case .image(let uIImage) = item {
+                handleImageMessage(image: uIImage)
+                viewModel.saveChatHistory(sender: Role.user, message: prompt, image: uIImage)
+                print("user hỏi :\(prompt ?? "") về ảnh")
+                guard let imageData = uIImage.jpegData(compressionQuality: 0.5) else {
+                    print("Failed to convert image to data")
+                    return
+                }
+                Task {
+                    let response = await viewModel.sendMessageWithImage(prompt: prompt ?? "trong ảnh có gì", imageData: imageData)
+                    print("AI response: \(response)")
+                    self.handleModelTextMessage(text: response)
+                }
+            } else {
+                print("inputBar khoong co image")
+            }
+        }
+    }
+    
 }
 
 

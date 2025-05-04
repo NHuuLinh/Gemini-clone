@@ -18,7 +18,6 @@ protocol MessageInputButtonViewDelegate: InputBarAccessoryViewDelegate{
     func getRootVC() -> UIViewController
     func inputBar(_ inputBar: InputBarAccessoryView, didPressSendButtonWith attachments: [AttachmentManager.Attachment])
     func inputBar(_ inputBar: InputBarAccessoryView, didPressSendButtonWith attachments: [AttachmentManager.Attachment], text: String)
-
 }
 
 
@@ -27,15 +26,15 @@ class MessageInputButtonView: InputBarAccessoryView {
     private var itemHeight: CGFloat {
         return itemWidth - 15
     }
-
+    
     private let itemSpacing: CGFloat = 0 // Khoảng cách giữa các mục
-
+    
     private var sourceType : SourceType = .camera
-
+    
     lazy var attachmentManager: AttachmentManager = { [unowned self] in
-      let manager = AttachmentManager()
-      manager.delegate = self
-      return manager
+        let manager = AttachmentManager()
+        manager.delegate = self
+        return manager
     }()
     
     override init(frame: CGRect) {
@@ -47,12 +46,12 @@ class MessageInputButtonView: InputBarAccessoryView {
     }
     @objc func textFieldDidChange(_ textField: UITextField) {
         inputTextView.text = textField.text
-//        print("Text changed: \(textField.text ?? "")")
+        //        print("Text changed: \(textField.text ?? "")")
     }
     required init?(coder _: NSCoder) {
-      fatalError("init(coder:) has not been implemented")
+        fatalError("init(coder:) has not been implemented")
     }
-
+    
     func setupInputTextView(){
         inputTextView.placeholder = "Aa"
         inputTextView.contentInset = UIEdgeInsets(top: 0, left: 5, bottom: 0, right: itemWidth)
@@ -84,7 +83,7 @@ class MessageInputButtonView: InputBarAccessoryView {
             makeButton(named: "photo").onSelected({ _ in
                 self.openPhotoLibrary()
             })
-            ]
+        ]
         leftStackView.alignment = .center
         if let view = middleContentView {
             view.backgroundColor = .clear
@@ -92,15 +91,15 @@ class MessageInputButtonView: InputBarAccessoryView {
         } else {
             print("no middleContentView")
         }
-
+        
         let totalItemSize = itemWidth * CGFloat(leftItems.count)
         backgroundView.backgroundColor = UIColor(hex: "#4A4B51")
         
         setLeftStackViewWidthConstant(to: CGFloat(totalItemSize), animated: false)
         setStackViewItems(leftItems, forStack: .left, animated: false)
         
-//        setRightStackViewWidthConstant(to: 100, animated: false)
-//        middleContentViewPadding.right = -itemWidth
+        //        setRightStackViewWidthConstant(to: 100, animated: false)
+        //        middleContentViewPadding.right = -itemWidth
         inputPlugins = [attachmentManager]
     }
     private func makeButton(named : String) -> InputBarButtonItem {
@@ -109,50 +108,30 @@ class MessageInputButtonView: InputBarAccessoryView {
             button.tintColor = UIColor(hex: "#5BE260")
             button.setSize(CGSize(width: itemWidth, height: itemHeight), animated: false)
             button.backgroundColor = .clear
-//            button.spacing = .fixed(10)
+            //            button.spacing = .fixed(10)
         }.onSelected { _ in
             print("Item onSelected")
         }.onDeselected {_ in
             print("Item onDeselected")
-//            $0.tintColor = UIColor.lightGray
-          }.onTouchUpInside { _ in
+            //            $0.tintColor = UIColor.lightGray
+        }.onTouchUpInside { _ in
             print("Item onTouchUpInside")
-          }
+        }
     }
-    private func makeButtons(named : String) -> InputBarButtonItem {
-        InputBarButtonItem().configure { button in
-//            button.spacing = .fixed(itemSpacing)
-            let color = UIColor(hex: "#5BE260") ?? UIColor.green
-            let image = UIImage(named: named)?.withTintColor(color, renderingMode: .alwaysTemplate)
-            button.image = image
-            button.tintColor = color
-            button.setSize(CGSize(width: itemWidth, height: itemHeight), animated: false)
-            button.backgroundColor = .clear
-//            button.spacing = .fixed(10)
-        }.onSelected { _ in
-            print("Item onSelected")
-        }.onDeselected {_ in
-            print("Item onDeselected")
-//            $0.tintColor = UIColor.lightGray
-          }.onTouchUpInside { _ in
-            print("Item onTouchUpInside")
-          }
-    }
-
+    
     override func didSelectSendButton() {
         let hasAttachments = (attachmentManager.attachments.count > 0)
         if hasAttachments  {
             if inputTextView.text.isEmpty {
                 (delegate as? MessageInputButtonViewDelegate)?.inputBar(self, didPressSendButtonWith: attachmentManager.attachments)
-
+                
             } else {
                 (delegate as? MessageInputButtonViewDelegate)?.inputBar(self, didPressSendButtonWith: attachmentManager.attachments, text: inputTextView.text)
             }
-            } else {
-                delegate?.inputBar(self, didPressSendButtonWith: inputTextView.text)
-            }
+        } else {
+            delegate?.inputBar(self, didPressSendButtonWith: inputTextView.text)
+        }
     }
-
 }
 // MARK: - Xử lí khi chọn ảnh và tệp
 
@@ -191,15 +170,15 @@ extension MessageInputButtonView: UIImagePickerControllerDelegate, UINavigationC
             (delegate as? MessageInputButtonViewDelegate)?.getRootVC().present(alertWarning, animated: true, completion: nil)
         }
     }
-
+    
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true) {
-                if let image = info[.originalImage] as? UIImage {
-                    self.inputPlugins.forEach({_ = $0.handleInput(of: image)})
+            if let image = info[.originalImage] as? UIImage {
+                self.inputPlugins.forEach({_ = $0.handleInput(of: image)})
             }
         }
     }
-
+    
 }
 
 extension MessageInputButtonView: AttachmentManagerDelegate {
@@ -230,14 +209,14 @@ extension MessageInputButtonView: AttachmentManagerDelegate {
         print("didSelectAddAttachmentAt: \(index)")
     }
     func setAttachmentManager(active: Bool) {
-      let topStackView = topStackView
-      if active, !topStackView.arrangedSubviews.contains(attachmentManager.attachmentView) {
-        topStackView.insertArrangedSubview(attachmentManager.attachmentView, at: topStackView.arrangedSubviews.count)
-        topStackView.layoutIfNeeded()
-      } else if !active, topStackView.arrangedSubviews.contains(attachmentManager.attachmentView) {
-        topStackView.removeArrangedSubview(attachmentManager.attachmentView)
-        topStackView.layoutIfNeeded()
-      }
+        let topStackView = topStackView
+        if active, !topStackView.arrangedSubviews.contains(attachmentManager.attachmentView) {
+            topStackView.insertArrangedSubview(attachmentManager.attachmentView, at: topStackView.arrangedSubviews.count)
+            topStackView.layoutIfNeeded()
+        } else if !active, topStackView.arrangedSubviews.contains(attachmentManager.attachmentView) {
+            topStackView.removeArrangedSubview(attachmentManager.attachmentView)
+            topStackView.layoutIfNeeded()
+        }
     }
 }
 

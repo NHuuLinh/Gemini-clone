@@ -1,0 +1,48 @@
+PODS:
+  - Alamofire (5.10.2)
+  - InputBarAccessoryView (5.5.0):
+    - InputBarAccessoryView/Core (= 5.5.0)
+  - InputBarAccessoryView/Core (5.5.0)
+  - KeychainSwift (24.0.0)
+  - Kingfisher (8.3.1)
+  - MBProgressHUD (1.2.0)
+  - MessageKit (3.8.0):
+    - InputBarAccessoryView (~> 5.5.0)
+  - Realm (20.0.1):
+    - Realm/Headers (= 20.0.1)
+  - Realm/Headers (20.0.1)
+  - RealmSwift (20.0.1):
+    - Realm (= 20.0.1)
+
+DEPENDENCIES:
+  - Alamofire
+  - KeychainSwift
+  - Kingfisher
+  - MBProgressHUD (~> 1.2.0)
+  - MessageKit (~> 3.8.0)
+  - RealmSwift
+
+SPEC REPOS:
+  trunk:
+    - Alamofire
+    - InputBarAccessoryView
+    - KeychainSwift
+    - Kingfisher
+    - MBProgressHUD
+    - MessageKit
+    - Realm
+    - RealmSwift
+
+SPEC CHECKSUMS:
+  Alamofire: 7193b3b92c74a07f85569e1a6c4f4237291e7496
+  InputBarAccessoryView: 1d7b0a672b36e370f01f264b3907ef39d03328e3
+  KeychainSwift: 007c4647486e4563adca839cf02cef00deb3b670
+  Kingfisher: 3204d23de16b5ea53541c44ca5a8efb55741dec3
+  MBProgressHUD: 3ee5efcc380f6a79a7cc9b363dd669c5e1ae7406
+  MessageKit: a1ba0c69ebead94029867853eb44dd05b9b3f453
+  Realm: 9572204903ef28caeb3c03bb30c1147f354ee3e7
+  RealmSwift: d230b44017a55a1ba97de6a944da1fe3bedb92b5
+
+PODFILE CHECKSUM: b8e6b5132237ed8fc7bd3b3e32e9423440815b99
+
+COCOAPODS: 1.16.2

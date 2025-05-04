@@ -13,11 +13,6 @@ import GoogleGenerativeAI
 
 final class MessageViewModel {
     //MARK: - Enum
-    enum fetchDataResult {
-        case success
-        case failure(String)
-        case unKnowError
-    }
     enum fetchDataResults {
         case success
         case failure(String)
@@ -27,13 +22,14 @@ final class MessageViewModel {
     //MARK: - Properties
     var userID = UserInfo.shared.getUserID()
     var currentUser = Sender(senderId: UserInfo.shared.getUserID() ?? "", displayName: UserInfo.shared.getUserFullName() ?? "")
+    //A57E317B-E809-4387-8578-9B47C8480ABF
     var idChat = ""
-    var chatHistory = [UserChatHistory]()
-    let apiKey = "AIzaSyAZvvxT5xPNyiFTg4abQXVrXJZo5RIfbRU"
+    var isFirstChat = true
+    var chatHistory = [ChatMessage]()
     private var model: GenerativeModel
     private var chat: Chat
-    private var stopGenerating = false
     private var chatTask: Task<Void, Never>?
+    private let realmManager = RealmManager.shared
     init() {
         model = GenerativeModel(name: "gemini-2.0-flash", apiKey: "AIzaSyAZvvxT5xPNyiFTg4abQXVrXJZo5RIfbRU")
         chat = model.startChat()
@@ -42,41 +38,23 @@ final class MessageViewModel {
     
     //MARK: - Lấy lịch sử chat
     func getAllChatData(handler: @escaping ((fetchDataResults) -> Void)){
-        guard idChat.count > 0 else {
+        if idChat.count < 1{
+            createNewConservation()
             handler(.outOfData)
             return
-        }
-        do {
-            let realm = try Realm()
-            if let result = realm.object(ofType: UserChatHistories.self, forPrimaryKey: idChat) {
-                self.chatHistory = Array(result.chatHistories)
-                handler(.success)
-            } else {
-                handler(.outOfData)
-            }
-        } catch {
-            handler(.failure("errror Realm: \(error.localizedDescription)"))
+        } else {
+            self.isFirstChat = false
+            self.chatHistory = realmManager.loadMessages(of: idChat)
+            print("chatHistory:\(chatHistory.count)")
+            handler(.success)
         }
     }
-    func saveHistoryPromt(text: String, role: Role.RawValue){
-        do {
-            let realm = try Realm()
-            let userChatHistories = UserChatHistories()
-            let chat = UserChatHistory()
-            chat.role = role
-            chat.text = text
-            userChatHistories.chatHistories.insert(chat, at: 0)
-            try realm.write {
-                realm.add(userChatHistories)
-            }
-        } catch {
-            print("error: \(error.localizedDescription)")
-        }
-    }
+
     func sendMessage(prompt: String) async -> String {
         do {
             let response = try await chat.sendMessage(prompt)
             if let text = response.text {
+                saveChatHistory(sender: Role.model,message: text)
                 return text
             } else {
                 return "Empty"
@@ -95,6 +73,7 @@ final class MessageViewModel {
         do {
             let response = try await chat.sendMessage([part])
             if let text = response.text {
+                saveChatHistory(sender: Role.model,message: text)
                 return text
             } else {
                 return "Phản hồi trống."
@@ -107,5 +86,25 @@ final class MessageViewModel {
     func startNewChat() {
         chatTask?.cancel()
         chat = model.startChat()
+    }
+}
+
+//MARK: - Realm
+extension MessageViewModel {
+    func createNewConservation(){
+            self.idChat = realmManager.createNewChatSession()
+    }
+    func saveChatHistory(sender:Role, message: String? = nil, image: UIImage? = nil){
+        if isFirstChat {
+            realmManager.saveHistoryPromt(sender: sender, message: message, image: image, idChat: idChat, isFirstChat: true)
+        } else {
+            realmManager.saveHistoryPromt(sender: sender, message: message, image: image, idChat: idChat)
+        }
+    }
+    func loadImageFromRealm(imagePath:String) -> UIImage{
+        guard let image = realmManager.loadImageFromPath(imagePath) else {
+            return UIImage(systemName: "questionmark.circle.dashed")!
+        }
+        return image
     }
 }
