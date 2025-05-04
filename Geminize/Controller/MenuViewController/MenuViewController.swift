@@ -27,7 +27,7 @@ class MenuViewController: UIViewController {
             print("menuBtn")
             menuBtn.isSelected.toggle()
             didSelectBtn?(menuBtn.isSelected)
-            animationBtn()
+//            animationBtn()
             print("leadingConstraint:\(leadingConstraint.constant)")
 
         default:

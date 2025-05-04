@@ -14,22 +14,24 @@ class MessengerViewController: BaseMessageViewController{
     private let viewModel = MessageViewModel()
     var reloadMessage : (() -> Void)?
     private var refeshControl = UIRefreshControl()
-    let menuWidth :CGFloat = 200.0
-    let allChatSubview = UIView(frame: CGRect(x: 0, y: 0, width: 1, height: 1))
-    private var allChatLeadingConstraint: NSLayoutConstraint!
-    private var messagesLeadingConstraint: NSLayoutConstraint?
+    private let allChatSubview = UIView()
+    private let headderBar = UIView()
+    private var messagesLeadingConstraint: NSLayoutConstraint!
+    private let menuPercent: CGFloat = 4
     
     override func viewDidLoad() {
         super.viewDidLoad()
         viewModel.startNewChat()
         setupCustomConstraints()
+        addHeadderBar()
     }
     
     override func viewIsAppearing(_ animated: Bool) {
 
     }
+    
     override func viewDidAppear(_ animated: Bool) {
-//        addHeadderBar()
+        
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -38,17 +40,17 @@ class MessengerViewController: BaseMessageViewController{
         registerDelegte()
         loadChatHistory()
     }
+    
     private func setupCustomConstraints() {
         messagesCollectionView.translatesAutoresizingMaskIntoConstraints = false
-        messagesLeadingConstraint = messagesCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 500)
-        messagesLeadingConstraint?.isActive = true
-
+        messagesLeadingConstraint = messagesCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0)
         NSLayoutConstraint.activate([
             messagesCollectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
             messagesCollectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            messagesCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
-            // Không cần leading nếu bạn đặt width cố định
+            messagesCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            messagesLeadingConstraint
         ])
+        print("setupCustomConstraints")
     }
     @objc func textFieldDidChange(_ textField: UITextField) {
         messageInputBar.inputTextView.text = textField.text
@@ -58,20 +60,16 @@ class MessengerViewController: BaseMessageViewController{
     }
     
     func loadChatHistory(){
-//        showLoading(isShow: true)
         viewModel.getAllChatData { [weak self] result in
             guard let self = self else {
-//                self?.showLoading(isShow: false)
                 return
             }
-//            self.showLoading(isShow: false)
             switch result {
             case .success:
                 self.handlerChatHistoryData()
             case .outOfData:
                 print("UnknowError")
                 self.handlerChatHistoryData()
-                //                self.view.makeToast("All chat history loaded",duration: 5.0 ,position: .top)
                 print("sd")
             case .failure(let error):
                 self.showAlert(title: "error", message: error)
@@ -81,61 +79,49 @@ class MessengerViewController: BaseMessageViewController{
             }
         }
     }
-    func caculateSafeArea() -> CGFloat{
-        var safeAreaHeight : CGFloat
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            if let window = windowScene.windows.first {
-                safeAreaHeight = window.safeAreaInsets.top// + window.safeAreaInsets.bottom
-                print("Chiều cao của safe area: \(safeAreaHeight)")
-            } else {
-                safeAreaHeight = 60
-                print("Không thể lấy được window")
-            }
-        } else {
-            safeAreaHeight = 60
-            print("Không thể lấy được window scene")
-        }
-        let height = 40 + safeAreaHeight
-        return height
-    }
     func addHeadderBar(){
-        let userSubview = UIView()
-        view.addSubview(userSubview)
-        userSubview.translatesAutoresizingMaskIntoConstraints = false
-        let widthConstraint = userSubview.widthAnchor.constraint(equalToConstant: view.bounds.width)
+        view.addSubview(headderBar)
+        headderBar.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            userSubview.topAnchor.constraint(equalTo: view.topAnchor),
-            userSubview.heightAnchor.constraint(equalToConstant: caculateSafeArea()),
-            userSubview.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            widthConstraint
+            headderBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            headderBar.bottomAnchor.constraint(equalTo: messagesCollectionView.topAnchor, constant: 0),
+            headderBar.trailingAnchor.constraint(equalTo: messagesCollectionView.trailingAnchor),
+            headderBar.leadingAnchor.constraint(equalTo: messagesCollectionView.leadingAnchor)
         ])
         
         let childVC = MenuViewController()
         addChild(childVC)
-        userSubview.addSubview(childVC.view)
-        childVC.menuSize = menuWidth
+        headderBar.addSubview(childVC.view)
         childVC.didSelectBtn = { [weak self] isSelected in
             guard let self = self else {return}
             UIView.animate(withDuration: 0.3) {
-                self.messagesCollectionView.contentInset.left = isSelected ? self.menuWidth : 0.1
-                self.allChatLeadingConstraint.constant = isSelected ? self.menuWidth : 0.1
-                self.allChatLeadingConstraint.isActive = true
+                self.messagesLeadingConstraint.constant = isSelected ? (self.view.bounds.width / self.menuPercent) : 0.1
+                self.messagesLeadingConstraint.isActive = true
                 self.view.layoutIfNeeded()
             }
         }
-        childVC.view.frame = userSubview.bounds
+//        childVC.view.frame = userSubview.bounds
+        childVC.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            childVC.view.topAnchor.constraint(equalTo: headderBar.topAnchor),
+            childVC.view.bottomAnchor.constraint(equalTo: headderBar.bottomAnchor),
+            childVC.view.leadingAnchor.constraint(equalTo: headderBar.leadingAnchor),
+            childVC.view.trailingAnchor.constraint(equalTo: headderBar.trailingAnchor)
+        ])
+
         childVC.didMove(toParent: self)
         view.addSubview(allChatSubview)
         allChatSubviewHandle()
+        print("addHeadderBar")
+
     }
     func allChatSubviewHandle(){
         allChatSubview.translatesAutoresizingMaskIntoConstraints = false
-        allChatLeadingConstraint = allChatSubview.trailingAnchor.constraint(equalTo: view.leadingAnchor)
         NSLayoutConstraint.activate([
-            allChatSubview.topAnchor.constraint(equalTo: view.topAnchor),
-            allChatSubview.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            allChatLeadingConstraint,
-            allChatSubview.widthAnchor.constraint(equalToConstant: menuWidth)
+            allChatSubview.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            allChatSubview.bottomAnchor.constraint(equalTo: messagesCollectionView.bottomAnchor),
+            allChatSubview.trailingAnchor.constraint(equalTo: messagesCollectionView.leadingAnchor),
+            allChatSubview.widthAnchor.constraint(equalToConstant: view.bounds.width/menuPercent)
         ])
         let childVC = AllChatHistoryViewController()
         childVC.didSelectChatHistory = { [weak self] idChat in
@@ -145,7 +131,13 @@ class MessengerViewController: BaseMessageViewController{
         }
         addChild(childVC)
         allChatSubview.addSubview(childVC.view)
-        childVC.view.frame = allChatSubview.bounds
+        childVC.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            childVC.view.topAnchor.constraint(equalTo: allChatSubview.topAnchor),
+            childVC.view.bottomAnchor.constraint(equalTo: allChatSubview.bottomAnchor),
+            childVC.view.leadingAnchor.constraint(equalTo: allChatSubview.leadingAnchor),
+            childVC.view.trailingAnchor.constraint(equalTo: allChatSubview.trailingAnchor)
+        ])
         childVC.didMove(toParent: self)
     }
     func handlerChatHistoryData() {

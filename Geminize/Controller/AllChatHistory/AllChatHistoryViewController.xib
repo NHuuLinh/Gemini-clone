@@ -21,10 +21,10 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="uk5-XK-yIr" userLabel="MainView">
-                    <rect key="frame" x="193" y="59" width="200" height="759"/>
+                    <rect key="frame" x="0.0" y="59" width="393" height="759"/>
                     <subviews>
                         <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" bounces="NO" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" bouncesZoom="NO" dataMode="none" translatesAutoresizingMaskIntoConstraints="NO" id="Cd5-Ig-Zuy">
-                            <rect key="frame" x="0.0" y="60" width="200" height="699"/>
+                            <rect key="frame" x="0.0" y="60" width="393" height="699"/>
                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="FWt-Qn-LMC">
                                 <size key="itemSize" width="20" height="20"/>
@@ -34,7 +34,7 @@
                             </collectionViewFlowLayout>
                         </collectionView>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="p0j-5Y-GAf" userLabel="Search View">
-                            <rect key="frame" x="0.0" y="0.0" width="200" height="50"/>
+                            <rect key="frame" x="0.0" y="0.0" width="393" height="50"/>
                             <subviews>
                                 <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="magnifyingglass" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="U5r-Af-Cjc">
                                     <rect key="frame" x="5" y="5.9999999999999964" width="40" height="38.333333333333329"/>
@@ -44,7 +44,7 @@
                                     </constraints>
                                 </imageView>
                                 <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Tìm kiếm" textAlignment="natural" minimumFontSize="17" clearButtonMode="always" translatesAutoresizingMaskIntoConstraints="NO" id="M8l-21-o1q">
-                                    <rect key="frame" x="50" y="5" width="145" height="40"/>
+                                    <rect key="frame" x="50" y="5" width="338" height="40"/>
                                     <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     <color key="tintColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -76,7 +76,6 @@
                         <constraint firstItem="p0j-5Y-GAf" firstAttribute="top" secondItem="uk5-XK-yIr" secondAttribute="top" id="Chi-Mx-SY2"/>
                         <constraint firstItem="Cd5-Ig-Zuy" firstAttribute="top" secondItem="p0j-5Y-GAf" secondAttribute="bottom" constant="10" id="EFF-Ng-Jbb"/>
                         <constraint firstItem="Cd5-Ig-Zuy" firstAttribute="leading" secondItem="uk5-XK-yIr" secondAttribute="leading" id="HdK-35-xwf"/>
-                        <constraint firstAttribute="width" constant="200" id="LDX-dl-XRF"/>
                         <constraint firstAttribute="trailing" secondItem="p0j-5Y-GAf" secondAttribute="trailing" id="kMp-eX-lzm"/>
                     </constraints>
                 </view>
@@ -84,6 +83,7 @@
             <viewLayoutGuide key="safeArea" id="fnl-2z-Ty3"/>
             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
             <constraints>
+                <constraint firstItem="uk5-XK-yIr" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" id="7aa-r8-wRc"/>
                 <constraint firstItem="fnl-2z-Ty3" firstAttribute="bottom" secondItem="uk5-XK-yIr" secondAttribute="bottom" id="bZr-p0-qOM"/>
                 <constraint firstItem="uk5-XK-yIr" firstAttribute="top" secondItem="fnl-2z-Ty3" secondAttribute="top" id="gGc-yf-o70"/>
                 <constraint firstItem="fnl-2z-Ty3" firstAttribute="trailing" secondItem="uk5-XK-yIr" secondAttribute="trailing" id="hbZ-Dc-zzq"/>

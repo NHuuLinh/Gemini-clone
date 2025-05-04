@@ -49,7 +49,7 @@ class AllChatHistoryViewController: UIViewController, UITextFieldDelegate {
     func loadMessages() {
         self.allChatHistory = RealmManager.shared.loadAllChat()
         self.allChatHistoryFilter = RealmManager.shared.loadAllChat()
-        print("RealmManager.shared.loadAllChat():\(RealmManager.shared.loadAllChat())")
+//        print("RealmManager.shared.loadAllChat():\(RealmManager.shared.loadAllChat())")
         applySnapshot()
     }
     @objc func filterChat(){
